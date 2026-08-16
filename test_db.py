@@ -1,13 +1,28 @@
-from app.db import get_connection
+from app.db import get_schema
+
+from app.db import get_foreign_keys
+
+schema = get_schema()
+
+for table, columns in schema.items():
+    print(f"\n{table}")
+
+    for column in columns:
+        print(
+            f"  {column['name']} "
+            f"({column['type']}) "
+            f"{column['key']}"
+        )
 
 
-connection = get_connection()
-cursor = connection.cursor()
 
-cursor.execute("SHOW TABLES;")
 
-for table in cursor.fetchall():
-    print(table[0])
+foreign_keys = get_foreign_keys()
 
-cursor.close()
-connection.close()
+for fk in foreign_keys:
+    print(
+        f"{fk['TABLE_NAME']}.{fk['COLUMN_NAME']} "
+        f"-> "
+        f"{fk['REFERENCED_TABLE_NAME']}."
+        f"{fk['REFERENCED_COLUMN_NAME']}"
+    )
