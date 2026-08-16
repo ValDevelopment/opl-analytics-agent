@@ -3,6 +3,9 @@ import os
 import mysql.connector
 from dotenv import load_dotenv
 
+import sqlglot
+from sqlglot import exp
+
 
 load_dotenv()
 
@@ -77,3 +80,51 @@ def get_foreign_keys():
     connection.close()
 
     return foreign_keys
+
+
+def execute_query(sql):
+    sql = sql.strip()
+
+    validate_query(sql)
+
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        return results
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def validate_query(sql):
+    try:
+        statements = sqlglot.parse(sql, read="mysql")
+    except sqlglot.errors.ParseError as e:
+        raise ValueError(f"Invalid SQL: {e}")
+
+    if len(statements) != 1:
+        raise ValueError("Only one SQL statement is allowed.")
+
+    statement = statements[0]
+
+    if not isinstance(statement, exp.Query):
+        raise ValueError("Only read-only queries are allowed.")
+
+    forbidden = (
+        exp.Insert,
+        exp.Update,
+        exp.Delete,
+        exp.Drop,
+        exp.Create,
+        exp.Alter,
+    )
+
+    for expression_type in forbidden:
+        if statement.find(expression_type):
+            raise ValueError("Query contains a prohibited operation.")
+
+    return True

@@ -5,6 +5,7 @@ from groq import Groq
 
 from app.db import get_schema, get_foreign_keys
 
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -65,15 +66,66 @@ Database schema:
 User question:
 {question}
 
-Write one MySQL SELECT query that answers the user's question.
+Return a JSON object with exactly these fields:
+
+{{
+  "sql": "one MySQL query",
+  "description": "short description of what the query does"
+}}
 
 Rules:
-- Only generate SELECT queries.
-- Never modify the database.
+- Only generate read-only queries.
 - Use only tables and columns that exist in the schema.
 - Use joins when necessary.
 - Do not invent columns.
-- Return only SQL.
+- Pay attention to whether the user is asking for unique entities versus individual records.
+- If asking for top lifters, teams, federations, etc., avoid duplicate entities unless the question explicitly asks for individual performances or records.
+- Unless the user explicitly requests more rows, limit result sets to at most 100 rows.
+- Return valid JSON only.
+"""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        temperature=0,
+        response_format={"type": "json_object"},
+    )
+
+    result = SQLGeneration.model_validate_json(
+        response.choices[0].message.content
+    )
+
+    return result
+
+
+def explain_results(question, sql, results):
+    prompt = f"""
+You are a data analyst.
+
+The user asked:
+{question}
+
+The following SQL query was executed:
+
+{sql}
+
+The database returned:
+
+{results}
+
+Answer the user's question using only the returned data.
+
+Rules:
+- Do not invent facts that are not present in the results.
+- Do not claim anything beyond what the query results support.
+- Be concise and direct.
+- Include relevant numbers.
+- Do not discuss the SQL unless it is necessary to explain the answer.
 """
 
     response = client.chat.completions.create(
@@ -87,8 +139,71 @@ Rules:
         temperature=0,
     )
 
-    sql = response.choices[0].message.content.strip()
+    return response.choices[0].message.content.strip()
 
-    sql = sql.replace("```sql", "").replace("```", "").strip()
 
-    return sql
+
+class SQLGeneration(BaseModel):
+    sql: str
+    description: str
+
+
+
+
+def repair_sql(question, sql, error):
+    schema_description = describe_database()
+
+    prompt = f"""
+You are fixing a failed MySQL query.
+
+Database schema:
+
+{schema_description}
+
+Original user question:
+{question}
+
+Failed SQL:
+{sql}
+
+Database error:
+{error}
+
+Return a JSON object with exactly these fields:
+
+{{
+  "sql": "corrected MySQL query",
+  "description": "short description of what was fixed"
+}}
+
+Rules:
+- Fix the query so it answers the original question.
+- Only generate read-only queries.
+- Use only tables and columns that exist in the schema.
+- Do not invent columns or tables.
+- Preserve the user's original analytical intent.
+- Return valid JSON only.
+- Preserve the original user's semantics, not just SQL validity.
+- If the original question asks for unique entities such as lifters, teams, or federations, do not return duplicate entities unless explicitly requested.
+- Preserve the original analytical meaning of the user's question, not just SQL validity.
+- When ranking unique entities by a numeric metric across multiple records, aggregate the metric per entity before ranking.
+- For questions such as "lifters with the highest total", use an aggregation such as MAX(...) with GROUP BY rather than DISTINCT.
+- Do not use DISTINCT as a substitute for grouping when the user is asking for the best, highest, lowest, average, or total metric per entity.
+- Ensure ORDER BY expressions are valid for the generated SELECT statement.
+"""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        temperature=0,
+        response_format={"type": "json_object"},
+    )
+
+    return SQLGeneration.model_validate_json(
+        response.choices[0].message.content
+    )
