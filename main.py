@@ -1,58 +1,28 @@
-from app.db import execute_query
-from app.llm import generate_sql, repair_sql, explain_results
+from app.agent import answer_question
 
 
 question = input("Ask a question about the database: ")
 
+response = answer_question(question)
 
-generated = generate_sql(question)
-print("\nGenerated SQL:\n")
-print(generated.sql)
+if response.error:
+    print("\nQuery failed:\n")
+    print(response.error)
 
-print("\nQuery description:\n")
-print(generated.description)
+else:
+    print("\nGenerated SQL:\n")
+    print(response.sql)
 
-try:
-    results = execute_query(generated.sql)
+    print("\nQuery description:\n")
+    print(response.description)
 
-except Exception as error:
-    print("\nQuery failed.")
-    print(error)
+    if response.was_repaired:
+        print("\nNote: the original query was automatically repaired.")
 
-    print("\nAttempting one repair...\n")
+    print("\nResults:\n")
 
-    repaired = repair_sql(
-        question,
-        generated.sql,
-        str(error),
-    )
+    for row in response.results:
+        print(row)
 
-    print("Repaired SQL:\n")
-    print(repaired.sql)
-
-    print("\nRepair description:\n")
-    print(repaired.description)
-
-    try:
-        results = execute_query(repaired.sql)
-        generated = repaired
-
-    except Exception as repair_error:
-        print("\nRepair failed.")
-        print(repair_error)
-        raise SystemExit(1)
-
-
-print("\nResults:\n")
-
-for row in results:
-    print(row)
-
-answer = explain_results(
-    question,
-    generated.sql,
-    results,
-)
-
-print("\nAnswer:\n")
-print(answer)
+    print("\nAnswer:\n")
+    print(response.answer)
