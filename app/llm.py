@@ -30,11 +30,15 @@ def describe_database():
             if not column["nullable"]:
                 details.append("not null")
 
-            lines.append(
-                f"- {column['name']}: {', '.join(details)}"
-            )
+            line = f"- {column['name']}: {', '.join(details)}"
 
-        lines.append("")
+            if table == "lifters" and column["name"] == "Sex":
+                line += " | observed values: F, M"
+
+            if table == "results" and column["name"] == "WeightClassKg":
+                line += " | examples: 83, 93, 105, 120, 120+"
+
+            lines.append(line)
 
     if foreign_keys:
         lines.append("RELATIONSHIPS")

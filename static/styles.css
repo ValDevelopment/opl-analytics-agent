@@ -1,0 +1,74 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+    color: #222;
+}
+
+.container {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 24px;
+}
+
+h1 {
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 32px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+textarea {
+    min-height: 100px;
+    padding: 14px;
+    font: inherit;
+    resize: vertical;
+}
+
+button {
+    width: fit-content;
+    padding: 10px 18px;
+    font: inherit;
+    cursor: pointer;
+}
+
+#status {
+    margin-top: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+pre {
+    overflow-x: auto;
+    background: #f1f1f1;
+    padding: 14px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.hidden {
+    display: none;
+}

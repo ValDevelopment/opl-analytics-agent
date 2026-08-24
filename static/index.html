@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Natural Language SQL Analytics</title>
+
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <main class="container">
+        <h1>Natural Language SQL Analytics</h1>
+
+        <p class="subtitle">
+            Ask questions about the OpenPowerlifting database in plain English.
+        </p>
+
+        <form id="question-form">
+            <textarea
+                id="question"
+                placeholder="Which federation has the most competition results?"
+                required
+            ></textarea>
+
+            <button type="submit">Ask</button>
+        </form>
+
+        <p id="status"></p>
+
+        <section id="response" class="hidden">
+            <div class="card">
+                <h2>Answer</h2>
+                <p id="answer"></p>
+            </div>
+
+            <div class="card">
+                <h2>Generated SQL</h2>
+                <pre><code id="sql"></code></pre>
+            </div>
+
+            <div class="card">
+                <h2>Query Description</h2>
+                <p id="description"></p>
+            </div>
+
+            <div class="card">
+                <h2>Results</h2>
+                <div id="results"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

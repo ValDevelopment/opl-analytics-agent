@@ -1,0 +1,9 @@
+id,category,question,expected_value
+1,count,How many results are there?,100000
+2,count,How many unique lifters are in the database?,46407
+3,ranking,Which federation has the most competition results?,IPF
+5,aggregation,What are the 5 most common weight classes?,93
+6,filter,How many competition results are from female lifters?,32109
+13,filter,How many results have a total over 1000 kg?,481
+16,date,Which year had the most competition results?,2025
+17,date,How many results were recorded in 2020?,621
